@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Заметки</string>
+    <string name="hint_search">Поиск заметок</string>
+    <string name="hint_title">Название</string>
+    <string name="hint_description">Описание</string>
+    <string name="btn_save">Сохранить</string>
+    <string name="btn_delete">Удалить</string>
+    <string name="btn_share">Поделиться</string>
+    <string name="btn_pdf">Конвертировать в PDF</string>
+</resources>
