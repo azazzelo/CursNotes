@@ -1,1 +1,1 @@
-https://github.com/azazzelo/NotesApp/main/Notes.apk
+https://github.com/azazzelo/NotesApp/Notes.apk
