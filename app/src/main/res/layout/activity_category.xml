@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Поле для ввода названия категории -->
+    <EditText
+        android:id="@+id/categoryNameEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Название категории"
+        android:textSize="18sp"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Поле для ввода цвета категории -->
+    <EditText
+        android:id="@+id/categoryColorEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Цвет категории (HEX)"
+        android:textSize="18sp"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Кнопка для сохранения категории -->
+    <Button
+        android:id="@+id/saveButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Сохранить" />
+
+</LinearLayout>

@@ -4,5 +4,6 @@ data class ListItem(
     val id: Long,
     val title: String,
     val description: String,
-    val category: String
+    val category: String,
+    val categoryColor: String
 )

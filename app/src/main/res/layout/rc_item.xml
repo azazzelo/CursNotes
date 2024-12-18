@@ -2,9 +2,10 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_margin="5dp"
+    android:background="?android:attr/selectableItemBackground"
     android:orientation="horizontal"
-    android:padding="16dp"
-    android:background="?android:attr/selectableItemBackground">
+    android:padding="16dp">
 
     <!-- Текстовое поле для отображения названия заметки -->
     <TextView
@@ -12,8 +13,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textSize="18sp"
         android:ellipsize="end"
-        android:maxLines="1" />
-
+        android:maxLines="1"
+        android:textSize="18sp" />
 </LinearLayout>

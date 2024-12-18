@@ -1,5 +1,6 @@
 package com.gzuev.android.notes
 
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,6 +18,15 @@ class MyAdapter(private var notesList: List<ListItem>, private val itemClickList
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val note = notesList[position]
         holder.titleTextView.text = note.title
+
+        // Устанавливаем цвет фона в зависимости от цвета категории
+        val categoryColor = if (note.categoryColor.isNotEmpty()) {
+            Color.parseColor(note.categoryColor)
+        } else {
+            Color.WHITE // Цвет по умолчанию, если categoryColor пустой
+        }
+        holder.itemView.setBackgroundColor(categoryColor)
+
         holder.itemView.setOnClickListener { itemClickListener(note) }
     }
 

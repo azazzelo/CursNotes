@@ -1,9 +1,11 @@
 package com.gzuev.android.notes
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
 import com.itextpdf.layout.Document
 import com.itextpdf.layout.element.Paragraph
 import com.itextpdf.kernel.pdf.PdfWriter
@@ -39,6 +41,11 @@ class EditActivity : AppCompatActivity() {
         dbHelper = MyDbHelper(this)
 
         val categories = dbHelper.getAllCategories()
+        if (categories.isEmpty()) {
+            Toast.makeText(this, "No categories found", Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
         val categoryAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, categories)
         categorySpinner.adapter = categoryAdapter
 
@@ -50,7 +57,9 @@ class EditActivity : AppCompatActivity() {
                 titleEditText.setText(note.title)
                 descriptionEditText.setText(note.description)
                 val categoryPosition = categories.indexOf(note.category)
-                categorySpinner.setSelection(categoryPosition)
+                if (categoryPosition != -1) {
+                    categorySpinner.setSelection(categoryPosition)
+                }
             }
         }
 
@@ -106,9 +115,21 @@ class EditActivity : AppCompatActivity() {
 
             document.close() // Закрываем документ
             Toast.makeText(this, "PDF created: ${file.absolutePath}", Toast.LENGTH_SHORT).show()
+
+            // Открываем PDF-файл
+            openPdf(file)
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(this, "Error creating PDF", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Error creating PDF: ${e.message}", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun openPdf(file: File) {
+        val uri: Uri = FileProvider.getUriForFile(this, "${packageName}.fileprovider", file)
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, "application/pdf")
+            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+        }
+        startActivity(Intent.createChooser(intent, "Open PDF"))
     }
 }

@@ -28,12 +28,23 @@
 
     <!-- Кнопка для добавления новой заметки -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab"
+        android:id="@+id/fabAddNote"
         android:contentDescription="whatever"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@android:drawable/ic_input_add"
         android:layout_gravity="end|bottom"
         android:layout_margin="16dp" />
+
+    <!-- Кнопка для добавления новой категории -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAddCategory"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:layout_margin="16dp"
+        android:layout_marginBottom="80dp"
+        android:contentDescription="whatever"
+        android:src="@android:drawable/ic_input_get" />
 
 </LinearLayout>

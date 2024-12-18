@@ -21,6 +21,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var searchView: SearchView
     private lateinit var categorySpinner: Spinner
     private lateinit var categories: List<String>
+    private lateinit var categoryAdapter: ArrayAdapter<String>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,7 +38,7 @@ class MainActivity : AppCompatActivity() {
         recyclerView.adapter = adapter
 
         categories = dbHelper.getAllCategories() // Get categories from DB
-        val categoryAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, categories)
+        categoryAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, categories)
         categorySpinner.adapter = categoryAdapter
 
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
@@ -71,10 +72,16 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        val fab: FloatingActionButton = findViewById(R.id.fab)
-        fab.setOnClickListener {
+        val fabAddNote: FloatingActionButton = findViewById(R.id.fabAddNote)
+        fabAddNote.setOnClickListener {
             val intent = Intent(this, EditActivity::class.java)
             startActivityForResult(intent, 1)
+        }
+
+        val fabAddCategory: FloatingActionButton = findViewById(R.id.fabAddCategory)
+        fabAddCategory.setOnClickListener {
+            val intent = Intent(this, CategoryActivity::class.java)
+            startActivityForResult(intent, 3)
         }
     }
 
@@ -86,9 +93,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 1 || requestCode == 2) {
+        if (requestCode == 1 || requestCode == 2 || requestCode == 3) {
             notesList = dbHelper.getAllNotes()
             adapter.updateList(notesList)
+
+            categories = dbHelper.getAllCategories()
+            categoryAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, categories)
+            categorySpinner.adapter = categoryAdapter
         }
     }
 }

@@ -15,135 +15,55 @@ class MyDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
         db?.execSQL(createCategoriesTable)
     }
 
-    fun addNote(title: String, description: String, category: String) {
+    override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
+        // Пример обновления базы данных: удаление старых таблиц и создание новых
+        db?.execSQL("DROP TABLE IF EXISTS $TABLE_NOTES")
+        db?.execSQL("DROP TABLE IF EXISTS $TABLE_CATEGORIES")
+        onCreate(db)
+    }
+
+    fun addCategory(categoryName: String, categoryColor: String) {
         val db = writableDatabase
         val values = ContentValues().apply {
-            put(COLUMN_TITLE, title)
-            put(COLUMN_DESCRIPTION, description)
-            put(COLUMN_CATEGORY, category)
+            put(COLUMN_CATEGORY_NAME, categoryName)
+            put(COLUMN_CATEGORY_COLOR, categoryColor)
         }
-        db.insert(TABLE_NOTES, null, values)
+        db.insert(TABLE_CATEGORIES, null, values)
     }
 
     fun getAllNotes(): ArrayList<ListItem> {
         val db = readableDatabase
-        val cursor = db.query(TABLE_NOTES, null, null, null, null, null, "$COLUMN_ID DESC")
+        val cursor = db.rawQuery("""
+            SELECT n.*, c.$COLUMN_CATEGORY_COLOR
+            FROM $TABLE_NOTES n
+            JOIN $TABLE_CATEGORIES c ON n.$COLUMN_CATEGORY = c.$COLUMN_CATEGORY_NAME
+            """, null)
+
         val notes = ArrayList<ListItem>()
 
-        // Проверяем индексы колонок
-        val columnIdIndex = cursor.getColumnIndex(COLUMN_ID)
-        val columnTitleIndex = cursor.getColumnIndex(COLUMN_TITLE)
-        val columnDescriptionIndex = cursor.getColumnIndex(COLUMN_DESCRIPTION)
-        val columnCategoryIndex = cursor.getColumnIndex(COLUMN_CATEGORY)
-
-        // Если хотя бы один индекс возвращает -1, пропускаем обработку
-        if (columnIdIndex != -1 && columnTitleIndex != -1 && columnDescriptionIndex != -1 && columnCategoryIndex != -1) {
-            while (cursor.moveToNext()) {
-                val id = cursor.getLong(columnIdIndex)
-                val title = cursor.getString(columnTitleIndex)
-                val description = cursor.getString(columnDescriptionIndex)
-                val category = cursor.getString(columnCategoryIndex)
-                notes.add(ListItem(id, title, description, category))
-            }
-        }
-
-        cursor.close()
-        return notes
-    }
-
-    fun getNotesByCategory(category: String): ArrayList<ListItem> {
-        val db = readableDatabase
-        val cursor = db.query(TABLE_NOTES, null, "$COLUMN_CATEGORY = ?", arrayOf(category), null, null, "$COLUMN_ID DESC")
-        val notes = ArrayList<ListItem>()
-
-        // Проверяем индексы колонок
-        val columnIdIndex = cursor.getColumnIndex(COLUMN_ID)
-        val columnTitleIndex = cursor.getColumnIndex(COLUMN_TITLE)
-        val columnDescriptionIndex = cursor.getColumnIndex(COLUMN_DESCRIPTION)
-        val columnCategoryIndex = cursor.getColumnIndex(COLUMN_CATEGORY)
-
-        if (columnIdIndex != -1 && columnTitleIndex != -1 && columnDescriptionIndex != -1 && columnCategoryIndex != -1) {
-            while (cursor.moveToNext()) {
-                val id = cursor.getLong(columnIdIndex)
-                val title = cursor.getString(columnTitleIndex)
-                val description = cursor.getString(columnDescriptionIndex)
-                val category = cursor.getString(columnCategoryIndex)
-                notes.add(ListItem(id, title, description, category))
-            }
-        }
-
-        cursor.close()
-        return notes
-    }
-
-    fun getNoteById(id: Long): ListItem? {
-        val db = readableDatabase
-        val cursor = db.query(
-            TABLE_NOTES,
-            null,
-            "$COLUMN_ID = ?",
-            arrayOf(id.toString()),
-            null, null, null
-        )
-
-        // Проверка наличия данных
         if (cursor.moveToFirst()) {
-            val columnIdIndex = cursor.getColumnIndex(COLUMN_ID)
-            val columnTitleIndex = cursor.getColumnIndex(COLUMN_TITLE)
-            val columnDescriptionIndex = cursor.getColumnIndex(COLUMN_DESCRIPTION)
-            val columnCategoryIndex = cursor.getColumnIndex(COLUMN_CATEGORY)
+            do {
+                val idIndex = cursor.getColumnIndex(COLUMN_ID)
+                val titleIndex = cursor.getColumnIndex(COLUMN_TITLE)
+                val descriptionIndex = cursor.getColumnIndex(COLUMN_DESCRIPTION)
+                val categoryIndex = cursor.getColumnIndex(COLUMN_CATEGORY)
+                val colorIndex = cursor.getColumnIndex(COLUMN_CATEGORY_COLOR)
 
-            // Если хотя бы один индекс -1, пропускаем обработку
-            if (columnIdIndex != -1 && columnTitleIndex != -1 && columnDescriptionIndex != -1 && columnCategoryIndex != -1) {
-                val title = cursor.getString(columnTitleIndex)
-                val description = cursor.getString(columnDescriptionIndex)
-                val category = cursor.getString(columnCategoryIndex)
-                cursor.close()
-                return ListItem(id, title, description, category)
-            }
-        }
+                // Проверяем индексы перед использованием
+                if (idIndex != -1 && titleIndex != -1 && descriptionIndex != -1 && categoryIndex != -1 && colorIndex != -1) {
+                    val id = cursor.getLong(idIndex)
+                    val title = cursor.getString(titleIndex)
+                    val description = cursor.getString(descriptionIndex)
+                    val category = cursor.getString(categoryIndex)
+                    val categoryColor = cursor.getString(colorIndex)
 
-        cursor.close()
-        return null
-    }
-
-
-    fun searchNotes(query: String): ArrayList<ListItem> {
-        val db = readableDatabase
-        val cursor = db.query(TABLE_NOTES, null, "$COLUMN_TITLE LIKE ? OR $COLUMN_DESCRIPTION LIKE ?", arrayOf("%$query%", "%$query%"), null, null, "$COLUMN_ID DESC")
-        val notes = ArrayList<ListItem>()
-
-        // Проверяем индексы колонок
-        val columnIdIndex = cursor.getColumnIndex(COLUMN_ID)
-        val columnTitleIndex = cursor.getColumnIndex(COLUMN_TITLE)
-        val columnDescriptionIndex = cursor.getColumnIndex(COLUMN_DESCRIPTION)
-
-        if (columnIdIndex != -1 && columnTitleIndex != -1 && columnDescriptionIndex != -1) {
-            while (cursor.moveToNext()) {
-                val id = cursor.getLong(columnIdIndex)
-                val title = cursor.getString(columnTitleIndex)
-                val description = cursor.getString(columnDescriptionIndex)
-                notes.add(ListItem(id, title, description, ""))
-            }
+                    notes.add(ListItem(id, title, description, category, categoryColor))
+                }
+            } while (cursor.moveToNext())
         }
 
         cursor.close()
         return notes
-    }
-
-    fun updateNote(id: Long, title: String, description: String, category: String) {
-        val db = writableDatabase
-        val values = ContentValues().apply {
-            put(COLUMN_TITLE, title)
-            put(COLUMN_DESCRIPTION, description)
-            put(COLUMN_CATEGORY, category)
-        }
-        db.update(TABLE_NOTES, values, "$COLUMN_ID = ?", arrayOf(id.toString()))
-    }
-
-    fun deleteNote(id: Long) {
-        val db = writableDatabase
-        db.delete(TABLE_NOTES, "$COLUMN_ID = ?", arrayOf(id.toString()))
     }
 
     fun getAllCategories(): List<String> {
@@ -164,10 +84,151 @@ class MyDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nu
         return categories
     }
 
-    override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
-        db?.execSQL("DROP TABLE IF EXISTS $TABLE_NOTES")
-        db?.execSQL("DROP TABLE IF EXISTS $TABLE_CATEGORIES")
-        onCreate(db)
+    fun getNoteById(id: Long): ListItem? {
+        val db = readableDatabase
+        val cursor = db.query(
+            TABLE_NOTES,
+            null,
+            "$COLUMN_ID = ?",
+            arrayOf(id.toString()),
+            null, null, null
+        )
+
+        if (cursor.moveToFirst()) {
+            val idIndex = cursor.getColumnIndex(COLUMN_ID)
+            val titleIndex = cursor.getColumnIndex(COLUMN_TITLE)
+            val descriptionIndex = cursor.getColumnIndex(COLUMN_DESCRIPTION)
+            val categoryIndex = cursor.getColumnIndex(COLUMN_CATEGORY)
+
+            if (idIndex != -1 && titleIndex != -1 && descriptionIndex != -1 && categoryIndex != -1) {
+                val title = cursor.getString(titleIndex)
+                val description = cursor.getString(descriptionIndex)
+                val category = cursor.getString(categoryIndex)
+                val categoryColor = getCategoryColorByName(category)
+                cursor.close()
+                return ListItem(id, title, description, category, categoryColor)
+            }
+        }
+
+        cursor.close()
+        return null
+    }
+
+    fun addNote(title: String, description: String, category: String) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put(COLUMN_TITLE, title)
+            put(COLUMN_DESCRIPTION, description)
+            put(COLUMN_CATEGORY, category)
+        }
+        db.insert(TABLE_NOTES, null, values)
+    }
+
+    fun updateNote(id: Long, title: String, description: String, category: String) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put(COLUMN_TITLE, title)
+            put(COLUMN_DESCRIPTION, description)
+            put(COLUMN_CATEGORY, category)
+        }
+        db.update(TABLE_NOTES, values, "$COLUMN_ID = ?", arrayOf(id.toString()))
+    }
+
+    fun deleteNote(id: Long) {
+        val db = writableDatabase
+        db.delete(TABLE_NOTES, "$COLUMN_ID = ?", arrayOf(id.toString()))
+    }
+
+    fun searchNotes(query: String): ArrayList<ListItem> {
+        val db = readableDatabase
+        val cursor = db.query(
+            TABLE_NOTES,
+            null,
+            "$COLUMN_TITLE LIKE ? OR $COLUMN_DESCRIPTION LIKE ?",
+            arrayOf("%$query%", "%$query%"),
+            null,
+            null,
+            "$COLUMN_ID DESC"
+        )
+
+        val notes = ArrayList<ListItem>()
+
+        if (cursor.moveToFirst()) {
+            do {
+                val idIndex = cursor.getColumnIndex(COLUMN_ID)
+                val titleIndex = cursor.getColumnIndex(COLUMN_TITLE)
+                val descriptionIndex = cursor.getColumnIndex(COLUMN_DESCRIPTION)
+                val categoryIndex = cursor.getColumnIndex(COLUMN_CATEGORY)
+
+                if (idIndex != -1 && titleIndex != -1 && descriptionIndex != -1 && categoryIndex != -1) {
+                    val id = cursor.getLong(idIndex)
+                    val title = cursor.getString(titleIndex)
+                    val description = cursor.getString(descriptionIndex)
+                    val category = cursor.getString(categoryIndex)
+                    val categoryColor = getCategoryColorByName(category)
+                    notes.add(ListItem(id, title, description, category, categoryColor))
+                }
+            } while (cursor.moveToNext())
+        }
+
+        cursor.close()
+        return notes
+    }
+
+    fun getNotesByCategory(category: String): ArrayList<ListItem> {
+        val db = readableDatabase
+        val cursor = db.query(
+            TABLE_NOTES,
+            null,
+            "$COLUMN_CATEGORY = ?",
+            arrayOf(category),
+            null,
+            null,
+            "$COLUMN_ID DESC"
+        )
+
+        val notes = ArrayList<ListItem>()
+
+        if (cursor.moveToFirst()) {
+            do {
+                val idIndex = cursor.getColumnIndex(COLUMN_ID)
+                val titleIndex = cursor.getColumnIndex(COLUMN_TITLE)
+                val descriptionIndex = cursor.getColumnIndex(COLUMN_DESCRIPTION)
+
+                if (idIndex != -1 && titleIndex != -1 && descriptionIndex != -1) {
+                    val id = cursor.getLong(idIndex)
+                    val title = cursor.getString(titleIndex)
+                    val description = cursor.getString(descriptionIndex)
+                    val categoryColor = getCategoryColorByName(category)
+                    notes.add(ListItem(id, title, description, category, categoryColor))
+                }
+            } while (cursor.moveToNext())
+        }
+
+        cursor.close()
+        return notes
+    }
+
+    private fun getCategoryColorByName(categoryName: String): String {
+        val db = readableDatabase
+        val cursor = db.query(
+            TABLE_CATEGORIES,
+            arrayOf(COLUMN_CATEGORY_COLOR),
+            "$COLUMN_CATEGORY_NAME = ?",
+            arrayOf(categoryName),
+            null, null, null
+        )
+
+        var categoryColor = ""
+        if (cursor.moveToFirst()) {
+            val colorIndex = cursor.getColumnIndex(COLUMN_CATEGORY_COLOR)
+            if (colorIndex != -1) {
+                categoryColor = cursor.getString(colorIndex)
+            }
+        }
+
+        cursor.close()
+        return categoryColor
     }
 
     companion object {
